@@ -3,6 +3,7 @@ package com.edgegesture.evilgodxu.screens.gesture.service.compassclock
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
@@ -124,9 +125,8 @@ class CompassClockView(context: Context) : View(context) {
         // 关闭时整体淡出
         if (closeProgress > 0f) {
             canvas.saveLayerAlpha(
-                0f, 0f, width.toFloat(), height.toFloat(),
-                (255 * (1 - easeInOut(closeProgress))).toInt(),
-                Canvas.ALL_SAVE_FLAG
+                RectF(0f, 0f, width.toFloat(), height.toFloat()),
+                (255 * (1 - easeInOut(closeProgress))).toInt()
             )
         }
 

@@ -1,9 +1,12 @@
 package com.edgegesture.evilgodxu.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.compose.runtime.remember
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import com.edgegesture.evilgodxu.screens.backtap.BackTapScreen
 import com.edgegesture.evilgodxu.screens.blacklist.AppBlacklistScreen
 import com.edgegesture.evilgodxu.screens.expandpanel.ExpandPanelScreen
@@ -16,164 +19,128 @@ import com.edgegesture.evilgodxu.screens.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object GestureRoute
+data object GestureRoute : NavKey
 
 @Serializable
-data object SettingsRoute
+data object SettingsRoute : NavKey
 
 @Serializable
-data object DataConfigRoute
+data object DataConfigRoute : NavKey
 
 @Serializable
-data object BlacklistRoute
+data object BlacklistRoute : NavKey
 
 @Serializable
-data object LaunchBlockRoute
+data object LaunchBlockRoute : NavKey
 
 @Serializable
-data object BackTapRoute
+data object BackTapRoute : NavKey
 
 @Serializable
-data object LeftEdgeConfigRoute
+data object LeftEdgeConfigRoute : NavKey
 
 @Serializable
-data object RightEdgeConfigRoute
+data object RightEdgeConfigRoute : NavKey
 
 @Serializable
-data object BottomEdgeConfigRoute
+data object BottomEdgeConfigRoute : NavKey
 
 @Serializable
-data object ExpandPanelRoute
+data object ExpandPanelRoute : NavKey
+
+/** 封装返回栈导航操作，供各页面回调调用 */
+class Navigator(private val backStack: NavBackStack<NavKey>) {
+
+    fun navigate(route: NavKey) {
+        backStack.add(route)
+    }
+
+    fun goBack() {
+        if (backStack.size > 1) backStack.removeLastOrNull()
+    }
+}
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun NavGraph(
-    navController: NavHostController,
     startDestination: GestureRoute = GestureRoute,
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable<GestureRoute> {
-            GestureSettingsScreen(
-                onNavigateToSettings = {
-                    navController.navigate(SettingsRoute)
-                },
-                onNavigateToBlacklist = {
-                    navController.navigate(BlacklistRoute)
-                },
-                onNavigateToLaunchBlock = {
-                    navController.navigate(LaunchBlockRoute)
-                },
-                onNavigateToBackTap = {
-                    navController.navigate(BackTapRoute)
-                },
-                onNavigateToLeftEdge = {
-                    navController.navigate(LeftEdgeConfigRoute)
-                },
-                onNavigateToRightEdge = {
-                    navController.navigate(RightEdgeConfigRoute)
-                },
-                onNavigateToBottomEdge = {
-                    navController.navigate(BottomEdgeConfigRoute)
-                },
-                onNavigateToExpandPanel = {
-                    navController.navigate(ExpandPanelRoute)
-                }
-            )
-        }
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(startDestination)
+    val navigator = remember { Navigator(backStack) }
 
-        composable<SettingsRoute> {
-            SettingsScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                },
-                onNavigateToDataConfig = {
-                    navController.navigate(DataConfigRoute)
-                }
-            )
-        }
+    NavDisplay(
+        backStack = backStack,
+        entryProvider = entryProvider {
+            entry<GestureRoute> {
+                GestureSettingsScreen(
+                    onNavigateToSettings = { navigator.navigate(SettingsRoute) },
+                    onNavigateToBlacklist = { navigator.navigate(BlacklistRoute) },
+                    onNavigateToLaunchBlock = { navigator.navigate(LaunchBlockRoute) },
+                    onNavigateToBackTap = { navigator.navigate(BackTapRoute) },
+                    onNavigateToLeftEdge = { navigator.navigate(LeftEdgeConfigRoute) },
+                    onNavigateToRightEdge = { navigator.navigate(RightEdgeConfigRoute) },
+                    onNavigateToBottomEdge = { navigator.navigate(BottomEdgeConfigRoute) },
+                    onNavigateToExpandPanel = { navigator.navigate(ExpandPanelRoute) }
+                )
+            }
 
-        composable<DataConfigRoute> {
-            DataConfigScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
+            entry<SettingsRoute> {
+                SettingsScreen(
+                    onNavigateBack = { navigator.goBack() },
+                    onNavigateToDataConfig = { navigator.navigate(DataConfigRoute) }
+                )
+            }
 
-        composable<BlacklistRoute> {
-            AppBlacklistScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
+            entry<DataConfigRoute> {
+                DataConfigScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        composable<LaunchBlockRoute> {
-            LaunchBlockScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
+            entry<BlacklistRoute> {
+                AppBlacklistScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        composable<BackTapRoute> {
-            BackTapScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
+            entry<LaunchBlockRoute> {
+                LaunchBlockScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        composable<LeftEdgeConfigRoute> {
-            EdgeGestureConfigScreen(
-                edgeType = EdgeType.LEFT,
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
+            entry<BackTapRoute> {
+                BackTapScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        composable<RightEdgeConfigRoute> {
-            EdgeGestureConfigScreen(
-                edgeType = EdgeType.RIGHT,
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
+            entry<LeftEdgeConfigRoute> {
+                EdgeGestureConfigScreen(
+                    edgeType = EdgeType.LEFT,
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        composable<BottomEdgeConfigRoute> {
-            EdgeGestureConfigScreen(
-                edgeType = EdgeType.BOTTOM,
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
+            entry<RightEdgeConfigRoute> {
+                EdgeGestureConfigScreen(
+                    edgeType = EdgeType.RIGHT,
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        composable<ExpandPanelRoute> {
-            ExpandPanelScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
-            )
+            entry<BottomEdgeConfigRoute> {
+                EdgeGestureConfigScreen(
+                    edgeType = EdgeType.BOTTOM,
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
+
+            entry<ExpandPanelRoute> {
+                ExpandPanelScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
         }
-    }
+    )
 }

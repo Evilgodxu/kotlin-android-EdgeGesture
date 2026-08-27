@@ -274,7 +274,7 @@ class MiniPlayerViewManager(
             } else {
                 params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             }
-            runCatching { windowManager.updateViewLayout(view!!, params) }
+            runCatching { windowManager.updateViewLayout(view, params) }
         }
         applyWindowLayout()
         if (expanded) {

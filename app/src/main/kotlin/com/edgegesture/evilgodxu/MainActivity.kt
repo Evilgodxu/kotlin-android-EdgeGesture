@@ -18,7 +18,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.rememberNavController
 import com.edgegesture.evilgodxu.data.gesture.gestureSettingsFlow
 import com.edgegesture.evilgodxu.navigation.NavGraph
 import com.edgegesture.evilgodxu.screens.settings.appLanguageFlow
@@ -78,7 +77,6 @@ class MainActivity : ComponentActivity() {
             ProvideLocalizedContext(localizationManager) {
                 ProvideWindowSizeClass {
                     MyApplicationTheme {
-                        val navController = rememberNavController()
                         val updateViewModel: UpdateViewModel = koinViewModel()
 
                         // 从通知打开时检查是否携带 show_update 标记
@@ -103,7 +101,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        NavGraph(navController = navController)
+                        NavGraph()
 
                         // 更新对话框
                         val updateInfo by updateViewModel.updateInfo.collectAsStateWithLifecycle()

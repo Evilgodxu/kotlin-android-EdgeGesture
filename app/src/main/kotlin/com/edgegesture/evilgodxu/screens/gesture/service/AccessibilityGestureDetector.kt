@@ -84,22 +84,16 @@ class AccessibilityGestureDetector(
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val currentX = event.rawX
-                    val currentY = event.rawY
-                    val deltaX = currentX - startX
-                    val deltaY = currentY - startY
-                    val absDeltaX = abs(deltaX)
-                    val absDeltaY = abs(deltaY)
+                    val deltaX = event.rawX - startX
+                    val deltaY = event.rawY - startY
 
-                    if (!isLongPressTriggered && !isSwipeStarted) {
-                        isSwipeStarted = true
-                        swipeDirection = when {
-                            absDeltaY > absDeltaX -> {
-                                if (deltaY > 0) SwipeDirection.DOWN else SwipeDirection.UP
-                            }
-                            else -> {
-                                if (deltaX > 0) SwipeDirection.RIGHT else SwipeDirection.LEFT
-                            }
+                    if (!isLongPressTriggered) {
+                        if (isSwipeStarted) {
+                            // 越过阈值后按当前主方向刷新，避免初始抖动锁定错误方向
+                            swipeDirection = resolveSwipeDirection(deltaX, deltaY)
+                        } else if (abs(deltaX) > swipeThreshold || abs(deltaY) > swipeThreshold) {
+                            isSwipeStarted = true
+                            swipeDirection = resolveSwipeDirection(deltaX, deltaY)
                         }
                     }
                     isSwipeStarted
@@ -121,14 +115,8 @@ class AccessibilityGestureDetector(
                     val isSwipe = absDeltaX > swipeThreshold || absDeltaY > swipeThreshold
 
                     if (isSwipe) {
-                        val direction = when {
-                            absDeltaY > absDeltaX -> {
-                                if (deltaY > 0) SwipeDirection.DOWN else SwipeDirection.UP
-                            }
-                            else -> {
-                                if (deltaX > 0) SwipeDirection.RIGHT else SwipeDirection.LEFT
-                            }
-                        }
+                        // 以起止点总位移裁定向，与 MOVE 阶段共用同一判向基准
+                        val direction = resolveSwipeDirection(deltaX, deltaY)
                         val settings = settingsProvider()
                         if (settings.doubleSwipeEnabled) {
                             if (pendingDirection == direction) {
@@ -160,6 +148,15 @@ class AccessibilityGestureDetector(
                 }
                 else -> false
             }
+        }
+    }
+
+    // 依据起止点位移判定主方向，纵向/横向互斥
+    private fun resolveSwipeDirection(deltaX: Float, deltaY: Float): SwipeDirection {
+        return if (abs(deltaY) > abs(deltaX)) {
+            if (deltaY > 0) SwipeDirection.DOWN else SwipeDirection.UP
+        } else {
+            if (deltaX > 0) SwipeDirection.RIGHT else SwipeDirection.LEFT
         }
     }
 
